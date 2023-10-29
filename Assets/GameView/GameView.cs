@@ -9,25 +9,45 @@ public class GameView : MonoBehaviour
 
     [SerializeField]
     private GameObject pistonPrefab;
+
+    private GameTimeline gameTimeline;
+
+    private List<CrateView> crateViews = new List<CrateView>();
+    private List<PistonView> pistonViews = new List<PistonView>();
+
+    private List<ITransition> transitions = new List<ITransition>();
     // Start is called before the first frame update
     void Start()
     {
+        gameTimeline = new GameTimeline();
+
         GameState state = new GameState();
         state.AddCrate(Vector2Int.right);
         state.AddCrate(Vector2Int.up);
         state.AddPiston(new Vector2Int(3, 0), GameUtils.Direction.East);
         state.AddPiston(new Vector2Int(1, 2), GameUtils.Direction.North);
+        state.SetPistonOrder(0, PistonState.PistonOrder.Extend);
 
-        InstantiateGameObects(state);
+        gameTimeline.SetStartState(state);
+        gameTimeline.ComputeStates(0, 16);
+
+        InstantiateGameObjects(state);
+        CreateTransitionsFromEvents(state);
     }
 
-    // Update is called once per frame
-    void Update()
-    {
-        
-    }
+    public void UpdateView(float time)
+	{
+        int stateIndex = Mathf.FloorToInt(time);
 
-    private void InstantiateGameObects(GameState state)
+        GameState state = gameTimeline.GetState(stateIndex);
+
+        foreach (PistonView view in pistonViews)
+		{
+            view.UpdateView(state);
+		}
+	}
+
+    private void InstantiateGameObjects(GameState state)
 	{
         InstantiateCrates(state);
         InstantiatePistons(state);
@@ -49,6 +69,7 @@ public class GameView : MonoBehaviour
             GameObject crateObject = Instantiate(cratePrefab, pos, Quaternion.identity, transform);
             var crateView = crateObject.GetComponent<CrateView>();
             crateView.CrateID = crate.id;
+            crateViews.Add(crateView);
         }
     }
 
@@ -65,9 +86,23 @@ public class GameView : MonoBehaviour
         {
             Vector3 pos = GameUtils.GridToSpace(piston.position);
             float rotation = (int)piston.direction * 90.0f;
-            GameObject crateObject = Instantiate(pistonPrefab, pos, Quaternion.Euler(0.0f, rotation, 0.0f), transform);
-            // var crateView = crateObject.GetComponent<CrateView>();
-            // crateView.CrateID = piston.id;
+            GameObject pistonObject = Instantiate(pistonPrefab, pos, Quaternion.Euler(0.0f, rotation, 0.0f), transform);
+            var pistonView = pistonObject.GetComponent<PistonView>();
+            pistonView.PistonID = piston.id;
+            pistonViews.Add(pistonView);
         }
     }
+
+    private void CreateTransitionsFromEvents(GameState state)
+	{
+        transitions.Clear();
+        foreach(IGameEvent gameEvent in state.Events)
+		{
+            ITransition transition = ITransition.CreateFromEvent(gameEvent);
+            if (transition != null)
+			{
+                transitions.Add(transition);
+			}
+		}
+	}
 }

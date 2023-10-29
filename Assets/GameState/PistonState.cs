@@ -15,4 +15,13 @@ public struct PistonState
         Extend,
         Retract
 	}
+
+    public PistonState(PistonState other)
+	{
+        id = other.id;
+        position = other.position;
+        direction = other.direction;
+        isExtended = other.isExtended;
+        order = other.order;
+	}
 }
