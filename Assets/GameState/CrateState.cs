@@ -6,5 +6,4 @@ public struct CrateState
 {
     public int id;
     public Vector2Int position;
-    public GameObject gameObject;
 }

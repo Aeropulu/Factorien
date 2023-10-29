@@ -24,4 +24,6 @@ public struct PistonState
         isExtended = other.isExtended;
         order = other.order;
 	}
+
+
 }

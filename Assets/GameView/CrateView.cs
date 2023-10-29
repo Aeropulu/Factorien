@@ -1,3 +1,4 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
@@ -19,4 +20,11 @@ public class CrateView : MonoBehaviour
         }
     }
 
+	public void UpdateView(GameState state)
+	{
+		if (state.TryGetCrateState(crateID, out CrateState crateState))
+        {
+            transform.localPosition = GameUtils.GridToSpace(crateState.position);
+        }
+	}
 }

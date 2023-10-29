@@ -8,6 +8,13 @@ public class AnimationTransition : ITransition
 	private AnimationCurve curve = null;
 	private AnimationClip clip = null;
 
+	public AnimationTransition(GameObject gameObject, AnimationCurve animationCurve, AnimationClip animationClip)
+	{
+		this.gameObject = gameObject;
+		curve = animationCurve;
+		clip = animationClip;
+	}
+
 	public void Apply(float time)
 	{
 		if (clip == null)

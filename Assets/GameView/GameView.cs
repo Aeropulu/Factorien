@@ -16,6 +16,8 @@ public class GameView : MonoBehaviour
     private List<PistonView> pistonViews = new List<PistonView>();
 
     private List<ITransition> transitions = new List<ITransition>();
+
+    private GameState currentState;
     // Start is called before the first frame update
     void Start()
     {
@@ -23,8 +25,9 @@ public class GameView : MonoBehaviour
 
         GameState state = new GameState();
         state.AddCrate(Vector2Int.right);
+        state.AddCrate(Vector2Int.right * 2);
         state.AddCrate(Vector2Int.up);
-        state.AddPiston(new Vector2Int(3, 0), GameUtils.Direction.East);
+        state.AddPiston(new Vector2Int(0, 0), GameUtils.Direction.East);
         state.AddPiston(new Vector2Int(1, 2), GameUtils.Direction.North);
         state.SetPistonOrder(0, PistonState.PistonOrder.Extend);
 
@@ -33,17 +36,37 @@ public class GameView : MonoBehaviour
 
         InstantiateGameObjects(state);
         CreateTransitionsFromEvents(state);
+
+        currentState = state;
     }
 
     public void UpdateView(float time)
 	{
         int stateIndex = Mathf.FloorToInt(time);
+        time -= stateIndex;
 
         GameState state = gameTimeline.GetState(stateIndex);
 
-        foreach (PistonView view in pistonViews)
+        if (state != currentState)
+        {
+            CreateTransitionsFromEvents(state);
+
+            foreach (PistonView view in pistonViews)
+            {
+                view.UpdateView(state);
+            }
+
+            currentState = state;
+        }
+
+        foreach (CrateView view in crateViews)
 		{
             view.UpdateView(state);
+		}
+
+        foreach(var transition in transitions)
+		{
+            transition.Apply(time);
 		}
 	}
 
@@ -98,11 +121,49 @@ public class GameView : MonoBehaviour
         transitions.Clear();
         foreach(IGameEvent gameEvent in state.Events)
 		{
-            ITransition transition = ITransition.CreateFromEvent(gameEvent);
+            ITransition transition = null;
+            if (gameEvent is PistonEvent)
+			{
+                PistonEvent pistonEvent = (PistonEvent)gameEvent;
+                GameObject gameObject = GetPistonGameObject(pistonEvent.pistonID);
+                transition = new AnimationTransition(gameObject, TransitionParameters.PistonExtendCurve, TransitionParameters.PistonExtendClip);
+			}
+
+            if (gameEvent is CrateMovedEvent)
+			{
+                CrateMovedEvent crateEvent = (CrateMovedEvent)gameEvent;
+                GameObject gameObject = GetCrateGameObject(crateEvent.CrateID);
+                AnimationCurve curve = crateEvent.MovementType == CrateMovedEventType.Pushed ? TransitionParameters.PistonExtendCurve : null;
+                Vector3 vector = GameUtils.GridToSpace(crateEvent.MovementVector);
+                transition = new PositionTransition(gameObject, curve, vector);
+			}
+
             if (transition != null)
 			{
                 transitions.Add(transition);
 			}
 		}
+	}
+
+    private GameObject GetPistonGameObject(int id)
+	{
+        foreach (PistonView view in pistonViews)
+		{
+            if (view.PistonID == id)
+                return view.gameObject;
+		}
+
+        return null;
+	}
+
+    private GameObject GetCrateGameObject(int id)
+	{
+        foreach (CrateView view in crateViews)
+        {
+            if (view.CrateID == id)
+                return view.gameObject;
+        }
+
+        return null;
 	}
 }

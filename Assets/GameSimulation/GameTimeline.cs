@@ -40,7 +40,7 @@ public class GameTimeline
 
 		for (int nState = startState; nState < endState; nState++)
 		{
-			GameState currentState = gameStates[startState];
+			GameState currentState = gameStates[nState];
 			GameState newState = GameSimulation.ComputeNextState(currentState);
 			if (gameStates.Count <= nState + 1)
 			{

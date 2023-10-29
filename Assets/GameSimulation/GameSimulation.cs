@@ -1,3 +1,4 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
@@ -8,6 +9,7 @@ public class GameSimulation
 	{
 		GameState newState = currentState.Clone();
 		RunPistons(currentState, newState);
+
 		return newState;
 	}
 
@@ -19,14 +21,15 @@ public class GameSimulation
 			PistonState currentPiston = currentState.Pistons[i];
 			if (currentPiston.order == PistonState.PistonOrder.Extend && currentPiston.isExtended == false)
 			{
-				// if can extend
-				AnimationTransition transition = new AnimationTransition();
-				nextState.Pistons[i] = new PistonState(currentPiston)
+				if (TryPush(currentPiston.position, currentPiston.direction, currentState, nextState))
 				{
-					order = PistonState.PistonOrder.None,
-					isExtended = true
-				};
-				currentState.AddEvent(new PistonEvent(currentPiston.id, PistonEventType.Extend));
+					nextState.Pistons[i] = new PistonState(currentPiston)
+					{
+						order = PistonState.PistonOrder.None,
+						isExtended = true
+					};
+					currentState.AddEvent(new PistonEvent(currentPiston.id, PistonEventType.Extend));
+				}
 			}
 
 			if (currentPiston.order == PistonState.PistonOrder.Retract && currentPiston.isExtended)
@@ -39,5 +42,32 @@ public class GameSimulation
 				currentState.AddEvent(new PistonEvent(currentPiston.id, PistonEventType.Retract));
 			}
 		}
+	}
+
+	private static bool TryPush(Vector2Int position, GameUtils.Direction direction, GameState currentState, GameState nextState)
+	{
+		Vector2Int directionVector = GameUtils.DirectionVectors[(int)direction];
+		Vector2Int pushIntoPosition = position + directionVector;
+		GameState.SquareContent squareContent = currentState.GetSquareContent(pushIntoPosition);
+
+		if (squareContent.pistonID != -1)
+			return false;
+
+		if (squareContent.crateID != -1)
+		{
+			if (TryPush(pushIntoPosition, direction, currentState, nextState))
+			{
+				CrateState newCrateState = new CrateState()
+				{ 
+					id = squareContent.crateID,
+					position = pushIntoPosition + directionVector,
+				};
+				nextState.TrySetCrateState(newCrateState);
+				currentState.AddEvent(new CrateMovedEvent(squareContent.crateID, CrateMovedEventType.Pushed, directionVector));
+			}
+			else return false;
+		}
+
+		return true;
 	}
 }

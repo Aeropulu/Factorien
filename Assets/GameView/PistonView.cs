@@ -23,9 +23,9 @@ public class PistonView : MonoBehaviour
 	{
         if (state.TryGetPistonState(pistonID, out PistonState piston))
 		{
-            transform.position = GameUtils.GridToSpace(piston.position);
+            transform.localPosition = GameUtils.GridToSpace(piston.position);
             float rotation = (int)piston.direction * 90.0f;
-            transform.rotation = Quaternion.Euler(0.0f, rotation, 0.0f);
+            transform.localRotation = Quaternion.Euler(0.0f, rotation, 0.0f);
 
             float animTime = piston.isExtended ? 1.0f : 0.0f;
             TransitionParameters.PistonExtendClip.SampleAnimation(gameObject, animTime);

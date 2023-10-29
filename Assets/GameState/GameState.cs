@@ -53,6 +53,20 @@ public class GameState
 		return false;
 	}
 
+	public bool TrySetCrateState(CrateState crate)
+	{
+		for (int i = 0; i < crates.Count; i++)
+		{
+			if (crates[i].id == crate.id)
+			{
+				crates[i] = crate;
+				return true;
+			}
+		}
+
+		return false;
+	}
+
 	public void AddPiston(Vector2Int position, GameUtils.Direction direction)
 	{
 		PistonState piston = new PistonState()
@@ -122,5 +136,47 @@ public class GameState
 		newState.pistons = new List<PistonState>(pistons);
 
 		return newState;
+	}
+
+	public SquareContent GetSquareContent(Vector2Int position)
+	{
+		int crateID = -1;
+		int pistonID = -1;
+		int conveyorID = -1;
+
+		foreach (var crate in crates)
+		{
+			if (crate.position == position)
+				crateID = crate.id;
+		}
+
+		foreach (var piston in pistons)
+		{
+			if (piston.position == position)
+				crateID = piston.id;
+
+			if (piston.isExtended)
+			{
+				Vector2Int extendedPistonPosition = piston.position + GameUtils.DirectionVectors[(int)piston.direction];
+				if (extendedPistonPosition == position)
+					crateID = piston.id;
+			}
+		}
+
+		var content = new SquareContent()
+		{
+			crateID = crateID,
+			pistonID = pistonID,
+			conveyorID = conveyorID
+		};
+
+		return content;
+	}
+
+	public struct SquareContent
+	{
+		public int crateID;
+		public int pistonID;
+		public int conveyorID;
 	}
 }
