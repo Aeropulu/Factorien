@@ -28,8 +28,9 @@ public class GameView : MonoBehaviour
         state.AddCrate(Vector2Int.right * 2);
         state.AddCrate(Vector2Int.up);
         state.AddPiston(new Vector2Int(0, 0), GameUtils.Direction.East);
-        state.AddPiston(new Vector2Int(1, 2), GameUtils.Direction.North);
+        state.AddPiston(new Vector2Int(-1, 0), GameUtils.Direction.East);
         state.SetPistonOrder(0, PistonState.PistonOrder.Extend);
+        state.SetPistonOrder(1, PistonState.PistonOrder.Extend);
 
         gameTimeline.SetStartState(state);
         gameTimeline.ComputeStates(0, 16);
