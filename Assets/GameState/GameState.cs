@@ -153,13 +153,13 @@ public class GameState
 		foreach (var piston in pistons)
 		{
 			if (piston.position == position)
-				crateID = piston.id;
+				pistonID = piston.id;
 
 			if (piston.isExtended)
 			{
 				Vector2Int extendedPistonPosition = piston.position + GameUtils.DirectionVectors[(int)piston.direction];
 				if (extendedPistonPosition == position)
-					crateID = piston.id;
+					pistonID = piston.id;
 			}
 		}
 
